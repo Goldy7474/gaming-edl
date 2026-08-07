@@ -2,8 +2,8 @@ name: Update Gaming EDL IPs
 
 on:
   schedule:
-    - cron: '0 */12 * * *'
-  workflow_dispatch:
+    - cron: '0 */12 * * *' # הרצה אוטומטית פעמיים ביום
+  workflow_dispatch: # מאפשר הרצה ידנית
 
 jobs:
   update-edl:
@@ -33,5 +33,6 @@ jobs:
             echo "No changes detected."
           else
             git commit -m "auto: update Gaming IP list"
+            git pull --rebase origin main
             git push
           fi
