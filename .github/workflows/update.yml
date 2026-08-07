@@ -2,8 +2,8 @@ name: Update Gaming EDL IPs
 
 on:
   schedule:
-    - cron: '0 */12 * * *' # הרצה אוטומטית פעמיים ביום
-  workflow_dispatch: # מאפשר הרצה ידנית
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
 
 jobs:
   update-edl:
