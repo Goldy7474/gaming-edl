@@ -3,7 +3,7 @@ import json
 import ipaddress
 import urllib.request
 
-# ASNs רשמיים של חברות פלטפורמות המשחקים
+# ASNs רשמיים של פלטפורמות המשחקים המובילות
 ASNS = [
     "AS33353",  # Sony PlayStation
     "AS19425",  # Sony Network Entertainment
@@ -16,7 +16,7 @@ ASNS = [
 ]
 
 OUTPUT_FILE = "gaming_ips.txt"
-MINIMUM_EXPECTED_PREFIXES = 20  # סף מינימלי להגנה מפני קובץ ריק/תקלת API
+MINIMUM_EXPECTED_PREFIXES = 20  # סף מינימלי להגנה מפני קובץ ריק / כשל תקשורת
 
 def fetch_asn_prefixes(asn):
     valid_prefixes = set()
@@ -27,9 +27,9 @@ def fetch_asn_prefixes(asn):
             url, 
             headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         )
-        # Timeout מוגדר של 15 שניות למניעת תקיעת התהליך
+        # Timeout מוגדר למניעת תקיעת ה-Runner
         with urllib.request.urlopen(req, timeout=15) as response:
-            data = json.loads(response.read().decode())
+            data = json.loads(response.read().decode('utf-8'))
             prefixes_list = data.get('data', {}).get('prefixes', [])
             
             for item in prefixes_list:
@@ -38,10 +38,10 @@ def fetch_asn_prefixes(asn):
                     continue
                 
                 try:
-                    # 1. אימות תקינות ונרמול מבנה ה-CIDR עבור Palo Alto
+                    # 1. נרמול ואימות CIDR תקין עבור Palo Alto (מונע כשל שורות ב-PAN-OS)
                     net_obj = ipaddress.ip_network(prefix, strict=False)
                     
-                    # 2. סינון כתובות פרטיות/פנימיות (RFC 1918)
+                    # 2. סינון כתובות פרטיות, Loopback או Unspecified (RFC 1918)
                     if not (net_obj.is_private or net_obj.is_loopback or net_obj.is_unspecified):
                         valid_prefixes.add(str(net_obj))
                     else:
@@ -65,13 +65,13 @@ def main():
         print(f"  -> Found {len(prefixes)} valid IPv4 prefixes for {asn}")
         all_ips.update(prefixes)
 
-    # 3. מנגנון Fail-Safe: הגנה מפני קובץ ריק או תוצאה חלקית בגלל תקלת תקשורת
+    # 3. מנגנון Fail-Safe: הכשלת הריצה אם נאספו פחות מהסף הצפוי
     if len(all_ips) < MINIMUM_EXPECTED_PREFIXES:
         print(f"[CRITICAL] Only {len(all_ips)} prefixes retrieved. Expected at least {MINIMUM_EXPECTED_PREFIXES}.", file=sys.stderr)
         print("[CRITICAL] Aborting file write to protect existing Palo Alto EDL.", file=sys.stderr)
-        sys.exit(1)  # הכשלת ה-Action ב-GitHub למניעת Commit של קובץ פגום
+        sys.exit(1)  # הכשלת ה-Action למניעת Commit של קובץ ריק או פגום
 
-    # 4. כתיבה ממוינת ונקייה לקובץ הפלט
+    # 4. כתיבה ממוינת ונקייה לקובץ הטקסט
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         for ip in sorted(all_ips):
             f.write(f"{ip}\n")
