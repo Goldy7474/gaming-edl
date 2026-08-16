@@ -1,9 +1,9 @@
-name: Update Games EDL IPs
+name: Update Gaming EDL IPs
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # הרצה אוטומטית כל 6 שעות
-  workflow_dispatch: # מאפשר הרצה ידנית מתוך ממשק GitHub Actions
+    - cron: '0 */12 * * *'  # הרצה מתוזמנת פעמיים ביום
+  workflow_dispatch:        # מאפשר הרצה יזומה ידנית מתוך ממשק GitHub
 
 permissions:
   contents: write
@@ -21,11 +21,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Run Resolution Script
+      - name: Run ASN Resolution Script
         run: python update_ips.py
 
-      - name: Commit and push changes
+      - name: Commit and push if changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto-update Games EDL IP list [skip ci]"
+          commit_message: "Auto-update Gaming EDL IP list [skip ci]"
           file_pattern: "gaming_ips.txt"
